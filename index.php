@@ -345,9 +345,9 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('parser')">Parser/Viewer</button>
-            <button class="tab" onclick="switchTab('sizer')">Sizer Helper</button>
-            <button class="tab" onclick="switchTab('diff')">Diff Tool</button>
+            <button class="tab active" onclick="switchTab('parser', event)">Parser/Viewer</button>
+            <button class="tab" onclick="switchTab('sizer', event)">Sizer Helper</button>
+            <button class="tab" onclick="switchTab('diff', event)">Diff Tool</button>
         </div>
 
         <div class="content">
@@ -432,7 +432,7 @@
         let searchMatches = [];
 
         // Switch between tabs
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // Hide all tool sections
             document.querySelectorAll('.tool-section').forEach(section => {
                 section.classList.remove('active');
@@ -527,10 +527,10 @@
                 const isArray = Array.isArray(data);
                 const entries = isArray ? data : Object.entries(data);
                 const count = isArray ? data.length : Object.keys(data).length;
-                const nodeId = 'node-' + Math.random().toString(36).substr(2, 9);
+                const nodeId = 'node-' + Math.random().toString(36).substring(2, 11);
                 
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\')">▼</span>';
+                html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\', event)">▼</span>';
                 if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
                 html += '<span class="tree-value">' + (isArray ? '[' : '{') + '</span>';
                 html += '<span class="tree-count">' + count + ' ' + (isArray ? 'items' : 'properties') + '</span>';
@@ -587,7 +587,7 @@
         }
 
         // Toggle tree node
-        function toggleNode(nodeId) {
+        function toggleNode(nodeId, event) {
             const node = document.getElementById(nodeId);
             const toggle = event.target;
             
@@ -637,13 +637,13 @@
                 const isArray = Array.isArray(data);
                 const entries = isArray ? data : Object.entries(data);
                 const count = isArray ? data.length : Object.keys(data).length;
-                const nodeId = 'node-' + Math.random().toString(36).substr(2, 9);
+                const nodeId = 'node-' + Math.random().toString(36).substring(2, 11);
                 
                 // Check if this node or any children match the search
                 const hasMatch = searchInObject(data, searchTerm) || (key && key.toLowerCase().includes(searchTerm));
                 
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\')">▼</span>';
+                html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\', event)">▼</span>';
                 if (key) {
                     html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
