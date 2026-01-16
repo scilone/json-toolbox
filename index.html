@@ -211,9 +211,19 @@
                             <div class="resizer-h hidden lg:block" data-target-prev="true"></div>
 
                             <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col gap-3 min-w-[100px]" style="flex: 1 1 50%;">
-                                <div class="flex items-center justify-between mb-1 text-xs uppercase tracking-wide text-slate-400">
-                                    <span class="text-slate-300 font-semibold">Tree View</span>
-                                    <span class="text-slate-500">Parser Output</span>
+                                <div class="flex items-center justify-between mb-1 text-xs uppercase tracking-wide text-slate-400 flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-slate-300 font-semibold">Tree View</span>
+                                        <span class="text-slate-500">Parser Output</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[11px]">
+                                        <select id="parserExportFormat" class="bg-[#0b1021] border border-slate-700 text-slate-100 rounded-md px-2 py-1 focus:ring-1 focus:ring-purple-500 focus:border-purple-500">
+                                            <option value="json">JSON</option>
+                                            <option value="yaml">YAML</option>
+                                        </select>
+                                        <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-1 rounded-lg text-xs font-semibold" onclick="copyParserExport()">Copy</button>
+                                        <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-1 rounded-lg text-xs font-semibold" onclick="downloadParserExport()">Download</button>
+                                    </div>
                                 </div>
                                 <div id="parserOutput" class="tree-view custom-scrollbar"></div>
                             </div>
@@ -484,6 +494,132 @@
             } catch (e) {
                 output.innerHTML = '<div class="error-message">Invalid JSON: ' + e.message + '</div>';
             }
+        }
+
+        function getSelectedParserFormat() {
+            const select = document.getElementById('parserExportFormat');
+            return (select?.value || 'json').toLowerCase();
+        }
+
+        function prepareParserExport() {
+            if (!editableParserData) {
+                alert('Please process JSON in the Parser/Viewer first.');
+                return null;
+            }
+
+            const format = getSelectedParserFormat();
+            let payload = '';
+
+            if (format === 'yaml') {
+                payload = convertToYaml(editableParserData);
+            } else {
+                payload = JSON.stringify(editableParserData, null, 2);
+            }
+
+            return { payload, format };
+        }
+
+        function copyParserExport() {
+            const exportData = prepareParserExport();
+            if (!exportData) return;
+
+            const { payload } = exportData;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(payload).catch(() => fallbackCopyText(payload));
+            } else {
+                fallbackCopyText(payload);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        function downloadParserExport() {
+            const exportData = prepareParserExport();
+            if (!exportData) return;
+
+            const { payload, format } = exportData;
+            const blob = new Blob([payload], { type: format === 'yaml' ? 'text/yaml' : 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'parser-output.' + (format === 'yaml' ? 'yaml' : 'json');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function convertToYaml(value) {
+            return toYaml(value, 0);
+        }
+
+        function toYaml(value, indentLevel) {
+            const indent = '  '.repeat(indentLevel);
+
+            if (value === null) return 'null';
+            if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+            if (typeof value === 'string') return formatYamlString(value);
+
+            if (Array.isArray(value)) {
+                if (value.length === 0) return '[]';
+                return value.map(item => {
+                    const serialized = toYaml(item, indentLevel + 1);
+                    const childIndent = '  '.repeat(indentLevel + 1);
+                    const lines = serialized.split('\n').map(line => line.startsWith(childIndent) ? line.slice(childIndent.length) : line);
+                    if (lines.length === 1 && isYamlInline(item)) {
+                        return `${indent}- ${lines[0]}`;
+                    }
+                    const indented = lines.map((line, idx) => idx === 0 ? `${indent}- ${line}` : `${indent}  ${line}`).join('\n');
+                    return indented;
+                }).join('\n');
+            }
+
+            if (typeof value === 'object') {
+                const entries = Object.entries(value);
+                if (entries.length === 0) return '{}';
+
+                return entries.map(([key, val]) => {
+                    const safeKey = formatYamlString(key);
+                    const serialized = toYaml(val, indentLevel + 1);
+                    const childIndent = '  '.repeat(indentLevel + 1);
+                    const lines = serialized.split('\n').map(line => line.startsWith(childIndent) ? line.slice(childIndent.length) : line);
+
+                    if (lines.length === 1 && isYamlInline(val)) {
+                        return `${indent}${safeKey}: ${lines[0]}`;
+                    }
+
+                    const indented = lines.map(line => `${indent}  ${line}`).join('\n');
+                    return `${indent}${safeKey}:\n${indented}`;
+                }).join('\n');
+            }
+
+            return '';
+        }
+
+        function isYamlInline(value) {
+            if (value === null) return true;
+            if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return true;
+            if (Array.isArray(value)) return value.length === 0;
+            if (typeof value === 'object') return Object.keys(value).length === 0;
+            return false;
+        }
+
+        function formatYamlString(str) {
+            const needsQuoting = str === '' || /^\s|\s$/.test(str) || /[:\-\?\[\]\{\},&\*#\!\|>\'%@`]/.test(str) || str.includes('\n');
+            if (needsQuoting) {
+                return JSON.stringify(str);
+            }
+            return str;
         }
 
         // Build tree view for parser/sizer
