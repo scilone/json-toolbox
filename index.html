@@ -1,598 +1,407 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JSON Toolbox</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            background: #f8f9fa;
-            border: none;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #495057;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .tab:hover {
-            background: #e9ecef;
-        }
-
-        .tab.active {
-            background: white;
-            color: #667eea;
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #667eea;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .tool-section {
-            display: none;
-        }
-
-        .tool-section.active {
-            display: block;
-        }
-
-        .input-section {
-            margin-bottom: 30px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 15px;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            resize: vertical;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 0.9em;
-        }
-
-        .tree-controls {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .file-label {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #28a745;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .file-label:hover {
-            background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .output-section {
-            margin-top: 30px;
-        }
-
-        .tree-view {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            max-height: 600px;
-            overflow: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-
-        .tree-node {
-            padding: 4px 0;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .tree-node-content {
-            display: inline-block;
-        }
-
-        .tree-toggle {
-            display: inline-block;
-            width: 20px;
-            cursor: pointer;
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .tree-key {
-            color: #a626a4;
-            font-weight: bold;
-        }
-
-        .tree-value {
-            color: #50a14f;
-        }
-
-        .tree-string {
-            color: #50a14f;
-        }
-
-        .tree-number {
-            color: #986801;
-        }
-
-        .tree-boolean {
-            color: #0184bc;
-        }
-
-        .tree-null {
-            color: #a0a1a7;
-        }
-
-        .tree-count {
-            color: #6c757d;
-            font-style: italic;
-            margin-left: 5px;
-        }
-
-        .tree-size {
-            color: #dc3545;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .size-percentage {
-            font-weight: bold;
-            padding: 2px 4px;
-            border-radius: 3px;
-            margin-left: 5px;
-        }
-
-        .size-tiny {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .size-small {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .size-medium {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        .size-large {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .size-huge {
-            background-color: #f5c6cb;
-            color: #721c24;
-            font-weight: bolder;
-        }
-
-        .tree-children {
-            margin-left: 25px;
-        }
-
-        .tree-children.collapsed {
-            display: none;
-        }
-
-        .highlight {
-            background-color: yellow;
-            font-weight: bold;
-        }
-
-        /* Search navigation styles */
-        .search-navigation {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .search-highlight {
-            background-color: #fff3cd;
-            border-left: 3px solid #ffc107;
-            padding-left: 5px;
-        }
-
-        .search-highlight.current-match {
-            background-color: #d1ecf1;
-            border-left-color: #17a2b8;
-        }
-
-        /* Maximized view styles */
-        .tree-view.maximized {
-            position: fixed !important;
-            top: 0 !important; /* Stick to top */
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            background: white !important;
-            z-index: 9999 !important;
-            padding: 60px 20px 20px 20px !important; /* Add top padding for close button */
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            max-height: none !important;
-            overflow: auto !important;
-            font-size: 16px !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-
-        /* Maximized view overlay */
-        .has-maximized-view::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9996;
-        }
-
-        .has-maximized-view .search-box {
-            position: fixed !important;
-            top: 10px !important;
-            left: 20px !important;
-            width: 300px !important; /* Fixed width instead of right constraint */
-            height: 33px !important; /* Match button height */
-            z-index: 10001 !important;
-            background: white !important;
-            border: 2px solid #667eea !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-            font-size: 14px !important;
-            padding: 0 12px !important;
-        }
-
-        .has-maximized-view .search-navigation {
-            position: fixed !important;
-            top: 10px !important;
-            left: 340px !important; /* Position after search box */
-            z-index: 10001 !important;
-            display: flex !important;
-            margin: 0;
-        }
-
-        .has-maximized-view .maximize-close-btn {
-            position: fixed !important;
-            top: 10px !important;
-            z-index: 10002 !important;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        .search-box:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .diff-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .diff-panel {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            max-height: 600px;
-            overflow: auto;
-        }
-
-        .diff-panel h3 {
-            margin-bottom: 15px;
-            color: #495057;
-        }
-
-        .diff-added {
-            background-color: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 8px;
-            margin: 4px 0;
-        }
-
-        .diff-removed {
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 8px;
-            margin: 4px 0;
-        }
-
-        .diff-modified {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 8px;
-            margin: 4px 0;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-            margin: 15px 0;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #c3e6cb;
-            margin: 15px 0;
-        }
-
-        .info-message {
-            background: #d1ecf1;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #bee5eb;
-            margin: 15px 0;
-        }
-    </style>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>JSON Toolbox</title>
+        <!-- Tailwind CSS v3 with plugins -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-bw3nHkZGVbFZN7R6pujISiFDUFxIr05oig3NbS1Ry6j3Tz7kRXKuX3sI5OGucs5cjox96D65gis6pZeTuY4Ykg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            :root {
+                --card-bg: #0f172a;
+                --editor-bg: #0b1021;
+                --text-primary: #e2e8f0;
+                --text-muted: #94a3b8;
+                --accent: #8b5cf6;
+                --accent-2: #22c55e;
+            }
+
+            body {
+                background: radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.3), transparent 35%),
+                            radial-gradient(circle at 80% 0%, rgba(34, 197, 235, 0.25), transparent 30%),
+                            #0b1021;
+                color: var(--text-primary);
+                font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+                min-height: 100vh;
+            }
+
+            .ambient-glow {
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.12), transparent 30%),
+                            radial-gradient(circle at 70% 10%, rgba(16, 185, 129, 0.1), transparent 25%),
+                            radial-gradient(circle at 80% 40%, rgba(14, 165, 233, 0.1), transparent 25%);
+                filter: blur(50px);
+                z-index: 0;
+            }
+
+            .bg-card-bg { background-color: var(--card-bg); }
+            .bg-editor-bg { background-color: var(--editor-bg); }
+
+            .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+            .tree-view {
+                background: var(--editor-bg);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 10px;
+                max-height: 640px;
+                overflow: auto;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono';
+                font-size: 13px;
+            }
+
+            .tree-view-content { display: block; }
+            .tree-node { color: var(--text-primary); padding: 2px 0; }
+            .tree-key { color: #facc15; }
+            .tree-string { color: #a5b4fc; }
+            .tree-number { color: #34d399; }
+            .tree-boolean { color: #60a5fa; }
+            .tree-null { color: var(--text-muted); }
+            .tree-value { color: #cbd5e1; }
+            .tree-count { color: var(--text-muted); margin-left: 8px; font-size: 12px; }
+            .tree-toggle { cursor: pointer; margin-right: 6px; color: #cbd5e1; user-select: none; }
+            .tree-children.collapsed { display: none; }
+
+            .add-btn, .add-inline { color: #22c55e; }
+            .add-inline { font-size: 11px; }
+            .delete-btn { color: #f43f5e; }
+
+            /* Show add/delete controls only on hover for clarity */
+            .tree-node .add-btn,
+            .tree-node .add-inline,
+            .tree-node .delete-btn {
+                opacity: 0;
+                transition: opacity 120ms ease;
+            }
+
+            .tree-node:hover .add-btn,
+            .tree-node:hover .add-inline,
+            .tree-node:hover .delete-btn {
+                opacity: 1;
+            }
+
+            .tree-size { color: var(--text-muted); margin-left: 8px; font-size: 12px; }
+            .size-percentage { margin-left: 4px; padding: 0 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); }
+            .size-tiny { color: #06b6d4; }
+            .size-small { color: #10b981; }
+            .size-medium { color: #f59e0b; }
+            .size-large { color: #f97316; }
+
+            .search-highlight { background-color: rgba(250, 204, 21, 0.12); border-radius: 4px; }
+            .current-match { outline: 1px solid rgba(250, 204, 21, 0.7); outline-offset: 2px; }
+            .highlight { background-color: rgba(250, 204, 21, 0.35); border-radius: 2px; }
+
+            .diff-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+            .diff-panel { background: var(--editor-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px; color: var(--text-primary); }
+            .diff-removed { color: #f87171; }
+            .diff-added { color: #4ade80; }
+            .diff-modified { color: #eab308; }
+
+            .btn { transition: transform 0.1s ease; }
+            .btn:active { transform: translateY(1px); }
+
+            .maximized { position: fixed; inset: 12px; z-index: 9998; background: var(--editor-bg); padding: 12px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; max-height: calc(100vh - 24px); padding-top: 80px; }
+            .has-maximized-view { overflow: hidden; }
+            .tree-view .editing { background: rgba(255, 255, 255, 0.03); }
+
+            /* Ensure search bar stays on top of the maximized tree view */
+            body.has-maximized-view .tool-section.active > div > div:first-child {
+                position: fixed;
+                top: 25px;
+                left: 25px;
+                right: 25px;
+                z-index: 10001;
+                background: var(--card-bg);
+                padding: 12px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .resizer-h {
+                width: 8px;
+                cursor: col-resize;
+                background: transparent;
+                transition: background 0.2s;
+                position: relative;
+                z-index: 10;
+                margin: 0 -2px; /* Pulls it slightly over siblings for better hit area without pushing them */
+            }
+            .resizer-h::before {
+                content: "";
+                position: absolute;
+                left: 2px;
+                right: 2px;
+                top: 0;
+                bottom: 0;
+                background: transparent;
+                border-radius: 2px;
+                transition: background 0.2s;
+            }
+            .resizer-h:hover::before, .resizer-h.resizing::before {
+                background: var(--accent);
+            }
+
+        </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🛠️ JSON Toolbox</h1>
-            <p>Parser, Sizer, and Diff Tools for JSON Manipulation</p>
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('parser', event)">Parser/Viewer</button>
-            <button class="tab" onclick="switchTab('sizer', event)">Sizer Helper</button>
-            <button class="tab" onclick="switchTab('diff', event)">Diff Tool</button>
-        </div>
-
-        <div class="content">
-            <!-- Parser/Viewer Tool -->
-            <div id="parser" class="tool-section active">
-                <h2>Parser/Viewer Tool</h2>
-                <div class="input-section">
-                    <div class="input-group">
-                        <label class="file-label">
-                            📁 Upload JSON File
-                            <input type="file" class="file-input" id="parserFileInput" accept=".json" onchange="loadFile('parser')">
-                        </label>
-                        <button class="btn btn-primary" onclick="processParser()">✨ Beautify & View</button>
-                        <button class="btn btn-secondary" onclick="clearInput('parser')">🗑️ Clear</button>
-                    </div>
-                    <textarea id="parserInput" placeholder="Paste your JSON here..."></textarea>
-                    <input type="text" id="parserSearch" class="search-box" placeholder="Search in JSON..." oninput="searchInTree('parser')">
-                    <div class="search-navigation" id="parserSearchNav" style="display: none;">
-                        <button class="btn btn-small" onclick="previousSearchResult('parser')">⬅️ Previous</button>
-                        <span id="parserSearchCount">0/0</span>
-                        <button class="btn btn-small" onclick="nextSearchResult('parser')">Next ➡️</button>
-                    </div>
-                </div>
-                <div class="output-section">
-                    <div class="tree-controls">
-                        <button class="btn btn-small" onclick="expandAll('parser')">🔽 Expand All</button>
-                        <button class="btn btn-small" onclick="collapseAll('parser')">🔼 Collapse All</button>
-                        <button class="btn btn-small" onclick="toggleFullscreen('parser')">🔍 Maximize</button>
-                    </div>
-                    <div id="parserOutput" class="tree-view"></div>
-                </div>
+<body class="min-h-screen flex flex-col items-center py-10 px-4 relative overflow-x-hidden">
+        <div class="ambient-glow"></div>
+        <header class="text-center relative z-10 mb-10">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <i class="fas fa-file-code text-purple-400 text-3xl"></i>
+                <h1 class="text-3xl font-bold text-white tracking-tight">JSON Toolbox</h1>
             </div>
+            <p class="text-slate-400 text-sm font-medium">Parser, Sizer & Diff tools in a modern UI</p>
+        </header>
 
-            <!-- Sizer Helper Tool -->
-            <div id="sizer" class="tool-section">
-                <h2>Sizer Helper Tool</h2>
-                <div class="input-section">
-                    <div class="input-group">
-                        <label class="file-label">
-                            📁 Upload JSON File
-                            <input type="file" class="file-input" id="sizerFileInput" accept=".json" onchange="loadFile('sizer')">
-                        </label>
-                        <button class="btn btn-primary" onclick="processSizer()">📊 Calculate Sizes</button>
-                        <button class="btn btn-secondary" onclick="clearInput('sizer')">🗑️ Clear</button>
-                    </div>
-                    <textarea id="sizerInput" placeholder="Paste your JSON here..."></textarea>
-                    <input type="text" id="sizerSearch" class="search-box" placeholder="Search in JSON..." oninput="searchInTree('sizer')">
-                    <div class="search-navigation" id="sizerSearchNav" style="display: none;">
-                        <button class="btn btn-small" onclick="previousSearchResult('sizer')">⬅️ Previous</button>
-                        <span id="sizerSearchCount">0/0</span>
-                        <button class="btn btn-small" onclick="nextSearchResult('sizer')">Next ➡️</button>
-                    </div>
-                </div>
-                <div class="output-section">
-                    <div class="tree-controls">
-                        <button class="btn btn-small" onclick="expandAll('sizer')">🔽 Expand All</button>
-                        <button class="btn btn-small" onclick="collapseAll('sizer')">🔼 Collapse All</button>
-                        <button class="btn btn-small" onclick="toggleFullscreen('sizer')">🔍 Maximize</button>
-                    </div>
-                    <div id="sizerOutput" class="tree-view"></div>
-                </div>
-            </div>
+        <nav class="relative z-10 mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-full p-1 flex items-center shadow-lg">
+            <button class="tab-btn flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-b from-purple-500 to-purple-700 text-white font-medium shadow-[0_0_15px_rgba(139,92,246,0.4)] transition-all" onclick="switchTab('parser', event)">Parser/Viewer</button>
+            <button class="tab-btn flex items-center gap-2 px-6 py-2 rounded-full text-slate-300 hover:text-white hover:bg-white/5 transition-colors" onclick="switchTab('sizer', event)">Sizer Helper</button>
+            <button class="tab-btn flex items-center gap-2 px-6 py-2 rounded-full text-slate-300 hover:text-white hover:bg-white/5 transition-colors" onclick="switchTab('diff', event)">Diff Tool</button>
+        </nav>
 
-            <!-- Diff Tool -->
-            <div id="diff" class="tool-section">
-                <h2>Diff Tool</h2>
-                <div class="input-section">
-                    <h3>First JSON</h3>
-                    <div class="input-group">
-                        <label class="file-label">
-                            📁 Upload JSON File
-                            <input type="file" class="file-input" id="diff1FileInput" accept=".json" onchange="loadFile('diff1')">
-                        </label>
-                        <button class="btn btn-secondary" onclick="clearInput('diff1')">🗑️ Clear</button>
-                    </div>
-                    <textarea id="diff1Input" placeholder="Paste first JSON here..."></textarea>
-                    
-                    <h3 style="margin-top: 20px;">Second JSON</h3>
-                    <div class="input-group">
-                        <label class="file-label">
-                            📁 Upload JSON File
-                            <input type="file" class="file-input" id="diff2FileInput" accept=".json" onchange="loadFile('diff2')">
-                        </label>
-                        <button class="btn btn-secondary" onclick="clearInput('diff2')">🗑️ Clear</button>
-                    </div>
-                    <textarea id="diff2Input" placeholder="Paste second JSON here..."></textarea>
-                    
-                    <div class="input-group" style="margin-top: 20px;">
-                        <button class="btn btn-primary" onclick="processDiff()">🔍 Compare JSONs</button>
-                    </div>
-                </div>
-                <div class="output-section">
-                    <div id="diffOutput"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <main class="w-full max-w-[1400px] bg-card-bg border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden relative z-10">
+            <section class="p-6 space-y-10">
+                <!-- Parser/Viewer Tool -->
+                <div id="parser" class="tool-section active space-y-4">
+                    <div class="flex flex-col gap-4 bg-card-bg/70 border border-white/5 rounded-2xl p-4 shadow-inner">
+                        <div class="flex flex-col xl:flex-row gap-3 items-start xl:items-center">
+                            <div class="flex flex-wrap gap-2">
+                                <label class="relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-blue-900/30 cursor-pointer">
+                                    <span>Upload JSON</span>
+                                    <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" id="parserFileInput" accept=".json" onchange="loadFile('parser')">
+                                </label>
+                                <button class="btn bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md" onclick="processParser()">Beautify & View</button>
+                                <button class="btn border border-slate-600 text-slate-200 hover:bg-white/5 px-4 py-2 rounded-lg text-sm font-semibold" onclick="clearInput('parser')">Clear</button>
+                            </div>
+                            <div class="flex-1 w-full xl:w-auto">
+                                <div class="flex items-center gap-2">
+                                    <div class="relative flex-1 min-w-[220px]">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                        <input id="parserSearch" class="search-box bg-[#050814] border border-slate-700 text-white text-sm rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 p-2 placeholder-slate-500 transition-all shadow-inner" placeholder="Search in JSON..." type="text" oninput="searchInTree('parser')">
+                                    </div>
+                                    <div class="search-navigation flex items-center gap-2" id="parserSearchNav">
+                                        <button class="btn bg-slate-800 hover:bg-slate-700 text-slate-100 px-3 py-2 rounded-md text-xs font-semibold" onclick="previousSearchResult('parser')">Prev</button>
+                                        <span class="text-slate-300 text-xs" id="parserSearchCount">0/0</span>
+                                        <button class="btn bg-slate-800 hover:bg-slate-700 text-slate-100 px-3 py-2 rounded-md text-xs font-semibold" onclick="nextSearchResult('parser')">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="expandAll('parser')">Expand All</button>
+                                <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="collapseAll('parser')">Collapse All</button>
+                                <button id="parserMaximizeBtn" class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="toggleFullscreen('parser')">Maximize</button>
+                            </div>
+                        </div>
 
-    <script>
+                        <div class="flex flex-col lg:flex-row gap-0">
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col min-w-[100px]" style="flex: 1 1 0%;">
+                                <div class="flex items-center justify-between mb-2 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">Raw JSON</span>
+                                    <span class="text-slate-500">Parser Input</span>
+                                </div>
+                                <textarea id="parserInput" class="flex-1 min-h-[400px] w-full bg-[#0b1021] text-slate-100 border border-slate-700 rounded-lg p-3 text-sm font-mono custom-scrollbar resize-none focus:ring-1 focus:ring-purple-500" placeholder="Paste your JSON here..."></textarea>
+                            </div>
+
+                            <div class="resizer-h hidden lg:block" data-target-prev="true"></div>
+
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col gap-3 min-w-[100px]" style="flex: 1 1 50%;">
+                                <div class="flex items-center justify-between mb-1 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">Tree View</span>
+                                    <span class="text-slate-500">Parser Output</span>
+                                </div>
+                                <div id="parserOutput" class="tree-view custom-scrollbar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sizer Helper Tool -->
+                <div id="sizer" class="tool-section space-y-4 hidden">
+                    <div class="flex flex-col gap-4 bg-card-bg/70 border border-white/5 rounded-2xl p-4 shadow-inner">
+                        <div class="flex flex-col xl:flex-row gap-3 items-start xl:items-center">
+                            <div class="flex flex-wrap gap-2">
+                                <label class="relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-blue-900/30 cursor-pointer">
+                                    <span>Upload JSON</span>
+                                    <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" id="sizerFileInput" accept=".json" onchange="loadFile('sizer')">
+                                </label>
+                                <button class="btn bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md" onclick="processSizer()">Calculate Sizes</button>
+                                <button class="btn border border-slate-600 text-slate-200 hover:bg-white/5 px-4 py-2 rounded-lg text-sm font-semibold" onclick="clearInput('sizer')">Clear</button>
+                            </div>
+                            <div class="flex-1 w-full xl:w-auto">
+                                <div class="flex items-center gap-2">
+                                    <div class="relative flex-1 min-w-[220px]">
+                                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                        <input id="sizerSearch" class="search-box bg-[#050814] border border-slate-700 text-white text-sm rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 p-2 placeholder-slate-500 transition-all shadow-inner" placeholder="Search in JSON..." type="text" oninput="searchInTree('sizer')">
+                                    </div>
+                                    <div class="search-navigation flex items-center gap-2" id="sizerSearchNav">
+                                        <button class="btn bg-slate-800 hover:bg-slate-700 text-slate-100 px-3 py-2 rounded-md text-xs font-semibold" onclick="previousSearchResult('sizer')">Prev</button>
+                                        <span class="text-slate-300 text-xs" id="sizerSearchCount">0/0</span>
+                                        <button class="btn bg-slate-800 hover:bg-slate-700 text-slate-100 px-3 py-2 rounded-md text-xs font-semibold" onclick="nextSearchResult('sizer')">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="expandAll('sizer')">Expand All</button>
+                                <button class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="collapseAll('sizer')">Collapse All</button>
+                                <button id="sizerMaximizeBtn" class="btn bg-[#2a2f3d] hover:bg-[#353b4d] text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold" onclick="toggleFullscreen('sizer')">Maximize</button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col lg:flex-row gap-0">
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col min-w-[100px]" style="flex: 1 1 0%;">
+                                <div class="flex items-center justify-between mb-2 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">Raw JSON</span>
+                                    <span class="text-slate-500">Sizer Input</span>
+                                </div>
+                                <textarea id="sizerInput" class="flex-1 min-h-[400px] w-full bg-[#0b1021] text-slate-100 border border-slate-700 rounded-lg p-3 text-sm font-mono custom-scrollbar resize-none focus:ring-1 focus:ring-purple-500" placeholder="Paste your JSON here..."></textarea>
+                            </div>
+
+                            <div class="resizer-h hidden lg:block" data-target-prev="true"></div>
+
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col gap-3 min-w-[100px]" style="flex: 1 1 0%;">
+                                <div class="flex items-center justify-between mb-1 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">Tree View</span>
+                                    <span class="text-slate-500">Sizer Output</span>
+                                </div>
+                                <div id="sizerOutput" class="tree-view custom-scrollbar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diff Tool -->
+                <div id="diff" class="tool-section space-y-4 hidden">
+                    <div class="flex flex-col gap-4 bg-card-bg/70 border border-white/5 rounded-2xl p-4 shadow-inner">
+                        <div class="grid lg:grid-cols-2 gap-4">
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col">
+                                <div class="flex items-center justify-between mb-2 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">First JSON</span>
+                                    <label class="relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-semibold shadow-md cursor-pointer">
+                                        <span>Upload</span>
+                                        <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" id="diff1FileInput" accept=".json" onchange="loadFile('diff1')">
+                                    </label>
+                                </div>
+                                <textarea id="diff1Input" class="flex-1 w-full bg-[#0b1021] text-slate-100 border border-slate-700 rounded-lg p-3 text-sm font-mono custom-scrollbar resize-none focus:ring-1 focus:ring-purple-500" placeholder="Paste first JSON here..."></textarea>
+                                <div class="mt-3">
+                                    <button class="btn border border-slate-600 text-slate-200 hover:bg-white/5 px-3 py-2 rounded-lg text-xs font-semibold" onclick="clearInput('diff1')">Clear</button>
+                                </div>
+                            </div>
+                            <div class="bg-editor-bg border border-white/5 rounded-xl p-4 shadow-inner flex flex-col">
+                                <div class="flex items-center justify-between mb-2 text-xs uppercase tracking-wide text-slate-400">
+                                    <span class="text-slate-300 font-semibold">Second JSON</span>
+                                    <label class="relative inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-md text-xs font-semibold shadow-md cursor-pointer">
+                                        <span>Upload</span>
+                                        <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" id="diff2FileInput" accept=".json" onchange="loadFile('diff2')">
+                                    </label>
+                                </div>
+                                <textarea id="diff2Input" class="flex-1 w-full bg-[#0b1021] text-slate-100 border border-slate-700 rounded-lg p-3 text-sm font-mono custom-scrollbar resize-none focus:ring-1 focus:ring-purple-500" placeholder="Paste second JSON here..."></textarea>
+                                <div class="mt-3">
+                                    <button class="btn border border-slate-600 text-slate-200 hover:bg-white/5 px-3 py-2 rounded-lg text-xs font-semibold" onclick="clearInput('diff2')">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between flex-wrap gap-3">
+                            <button class="btn bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md" onclick="processDiff()">Compare JSONs</button>
+                            <p class="text-slate-400 text-xs">Outputs show differences, missing keys, and mismatched values.</p>
+                        </div>
+
+                        <div id="diffOutput" class="diff-container"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-6 text-slate-500 text-xs">© 2026 JSON Toolbox. All rights reserved.</footer>
+
+        <script>
         // Global variables for storing parsed data
-        let parserData = null;
+        let parserData = null;           // parsed from input (source of truth for original)
         let sizerData = null;
+        let editableParserData = null;   // editable copy for the tree
+        let editableSizerData = null;
         let searchMatches = [];
         let currentSearchIndex = 0;
+        let isEditing = false;
 
-        // Switch between tabs
+        // Resizer Logic
+        function initResizers() {
+            document.querySelectorAll('.resizer-h').forEach(resizer => {
+                const prev = resizer.previousElementSibling;
+                const next = resizer.nextElementSibling;
+                if (!prev || !next) return;
+
+                // Ensure containers don't collapse too much and have correct flex base
+                next.style.flex = "1 1 0%"; 
+
+                resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const startX = e.clientX;
+                    const startWidthPrev = prev.getBoundingClientRect().width;
+                    const parentWidth = resizer.parentElement.getBoundingClientRect().width;
+                    
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    
+                    const onMouseMove = (moveEvent) => {
+                        const dx = moveEvent.clientX - startX;
+                        let newPrevWidth = startWidthPrev + dx;
+                        
+                        // Constraints (min 100px on both sides approx)
+                        if (newPrevWidth < 100) newPrevWidth = 100;
+                        if (newPrevWidth > parentWidth - 100) newPrevWidth = parentWidth - 100;
+
+                        const prevPercent = (newPrevWidth / parentWidth) * 100;
+                        prev.style.flex = `0 0 ${prevPercent}%`;
+                        prev.style.maxWidth = `${prevPercent}%`; // Double security
+                    };
+
+                    const onMouseUp = () => {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = 'default';
+                        document.body.style.userSelect = '';
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initResizers);
+
+        // Switch between tabs and sync pills/sections
         function switchTab(tabName, event) {
-            // Hide all tool sections
             document.querySelectorAll('.tool-section').forEach(section => {
+                section.classList.add('hidden');
                 section.classList.remove('active');
             });
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-b', 'from-purple-500', 'to-purple-700', 'text-white', 'shadow-[0_0_15px_rgba(139,92,246,0.4)]', 'border', 'border-purple-300/40');
+                btn.classList.add('text-slate-300', 'hover:text-white', 'hover:bg-white/5');
             });
-            
-            // Show selected tool section
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to selected tab
-            event.target.classList.add('active');
+
+            const targetSection = document.getElementById(tabName);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                targetSection.classList.add('active');
+            }
+
+            const targetBtn = event?.target?.closest('.tab-btn');
+            if (targetBtn) {
+                targetBtn.classList.add('bg-gradient-to-b', 'from-purple-500', 'to-purple-700', 'text-white', 'shadow-[0_0_15px_rgba(139,92,246,0.4)]', 'border', 'border-purple-300/40');
+                targetBtn.classList.remove('text-slate-300', 'hover:text-white', 'hover:bg-white/5');
+            }
         }
 
         // Load file content
@@ -669,33 +478,43 @@
             
             try {
                 parserData = JSON.parse(input);
-                output.innerHTML = buildTreeView(parserData, '', false);
+                editableParserData = deepClone(parserData);
+                output.innerHTML = buildTreeView(editableParserData, '', false);
+                attachEditableHandlers('parser');
             } catch (e) {
                 output.innerHTML = '<div class="error-message">Invalid JSON: ' + e.message + '</div>';
             }
         }
 
-        // Build tree view for parser
-        function buildTreeView(data, path, showSize, totalSize = 0) {
+        // Build tree view for parser/sizer
+        function buildTreeView(data, path, showSize, totalSize = 0, allowEdit = true) {
             let html = '<div class="tree-view-content">';
-            html += buildTreeNode(data, '', path, 0, showSize, totalSize);
+            html += buildTreeNode(data, '', path, 0, showSize, totalSize, allowEdit);
             html += '</div>';
             return html;
         }
 
         // Build a single tree node
-        function buildTreeNode(data, key, path, level, showSize, totalSize = 0) {
-            const currentPath = path ? path + '.' + key : key;
+        function buildTreeNode(data, key, path, level, showSize, totalSize = 0, allowEdit = true) {
+            const currentPath = path ? (key ? path + '.' + key : path) : key;
             let html = '';
             
             if (data === null) {
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
-                html += '<span class="tree-null">null</span>';
+                if (key) {
+                    const keyAttrs = allowEdit ? 'class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true"' : 'class="tree-key"';
+                    html += '<span ' + keyAttrs + '>"' + key + '"</span>: ';
+                }
+                const nullAttrs = allowEdit ? 'class="tree-null editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true"' : 'class="tree-null"';
+                html += '<span ' + nullAttrs + '>null</span>';
+                if (allowEdit && currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                }
                 if (showSize) {
                     const size = getByteSize('null');
                     html += getSizeSpan(size, totalSize);
                 }
+                if (allowEdit && currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 html += '</div>';
             } else if (typeof data === 'object') {
                 const isArray = Array.isArray(data);
@@ -705,9 +524,14 @@
                 
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
                 html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\', event)">▼</span>';
-                if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
+                if (key) {
+                    const keyAttrs = allowEdit ? 'class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true"' : 'class="tree-key"';
+                    html += '<span ' + keyAttrs + '>"' + key + '"</span>: ';
+                }
                 html += '<span class="tree-value">' + (isArray ? '[' : '{') + '</span>';
                 html += '<span class="tree-count">' + count + ' ' + (isArray ? 'items' : 'properties') + '</span>';
+                if (allowEdit) html += '<button class="ml-2 text-xs text-emerald-300 hover:text-emerald-200 add-btn" data-add-type="' + (isArray ? 'array' : 'object') + '" data-add-path="' + currentPath + '">＋</button>';
+                if (allowEdit && currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 
                 if (showSize) {
                     const size = getByteSize(JSON.stringify(data));
@@ -732,7 +556,7 @@
                     }
                     
                     items.forEach(item => {
-                        html += buildTreeNode(item.value, '[' + item.index + ']', currentPath, level + 1, showSize, totalSize);
+                        html += buildTreeNode(item.value, '[' + item.index + ']', currentPath, level + 1, showSize, totalSize, allowEdit);
                     });
                 } else {
                     // Sort properties by size descending for sizer tool
@@ -745,11 +569,11 @@
                         })).sort((a, b) => b.size - a.size);
                         
                         entries.forEach(entry => {
-                            html += buildTreeNode(entry.value, entry.key, currentPath, level + 1, showSize, totalSize);
+                            html += buildTreeNode(entry.value, entry.key, currentPath, level + 1, showSize, totalSize, allowEdit);
                         });
                     } else {
                         entries.forEach(([k, v]) => {
-                            html += buildTreeNode(v, k, currentPath, level + 1, showSize, totalSize);
+                            html += buildTreeNode(v, k, currentPath, level + 1, showSize, totalSize, allowEdit);
                         });
                     }
                 }
@@ -760,30 +584,54 @@
                 html += '</div>';
             } else if (typeof data === 'string') {
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
-                html += '<span class="tree-string">"' + escapeHtml(data) + '"</span>';
+                if (key) {
+                    const keyAttrs = allowEdit ? 'class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true"' : 'class="tree-key"';
+                    html += '<span ' + keyAttrs + '>"' + key + '"</span>: ';
+                }
+                const strAttrs = allowEdit ? 'class="tree-string editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true"' : 'class="tree-string"';
+                html += '<span ' + strAttrs + '>"' + escapeHtml(data) + '"</span>';
+                if (allowEdit && currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                }
                 if (showSize) {
                     const size = getByteSize('"' + data + '"');
                     html += getSizeSpan(size, totalSize);
                 }
+                if (allowEdit && currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 html += '</div>';
             } else if (typeof data === 'number') {
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
-                html += '<span class="tree-number">' + data + '</span>';
+                if (key) {
+                    const keyAttrs = allowEdit ? 'class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true"' : 'class="tree-key"';
+                    html += '<span ' + keyAttrs + '>"' + key + '"</span>: ';
+                }
+                const numAttrs = allowEdit ? 'class="tree-number editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true"' : 'class="tree-number"';
+                html += '<span ' + numAttrs + '>' + data + '</span>';
+                if (allowEdit && currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                }
                 if (showSize) {
                     const size = getByteSize(data.toString());
                     html += getSizeSpan(size, totalSize);
                 }
+                if (allowEdit && currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 html += '</div>';
             } else if (typeof data === 'boolean') {
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
-                if (key) html += '<span class="tree-key">"' + key + '"</span>: ';
-                html += '<span class="tree-boolean">' + data + '</span>';
+                if (key) {
+                    const keyAttrs = allowEdit ? 'class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true"' : 'class="tree-key"';
+                    html += '<span ' + keyAttrs + '>"' + key + '"</span>: ';
+                }
+                const boolAttrs = allowEdit ? 'class="tree-boolean editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true"' : 'class="tree-boolean"';
+                html += '<span ' + boolAttrs + '>' + data + '</span>';
+                if (allowEdit && currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                }
                 if (showSize) {
                     const size = getByteSize(data.toString());
                     html += getSizeSpan(size, totalSize);
                 }
+                if (allowEdit && currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 html += '</div>';
             }
             
@@ -800,7 +648,7 @@
                 toggle.textContent = '▼';
             } else {
                 node.classList.add('collapsed');
-                toggle.textContent = '▶';
+                toggle.textContent = '►';
             }
         }
 
@@ -821,49 +669,40 @@
             const toggles = output.querySelectorAll('.tree-toggle');
             
             nodes.forEach(node => node.classList.add('collapsed'));
-            toggles.forEach(toggle => toggle.textContent = '▶');
+            toggles.forEach(toggle => toggle.textContent = '►');
         }
 
         // Search in tree
         function searchInTree(toolName) {
-            const searchTerm = document.getElementById(toolName + 'Search').value.toLowerCase();
-            const navElement = document.getElementById(toolName + 'SearchNav');
-            const countElement = document.getElementById(toolName + 'SearchCount');
+            const searchTerm = document.getElementById(toolName + 'Search').value.toLowerCase().trim();
+            const output = document.getElementById(toolName + 'Output');
+            const dataRef = toolName === 'parser' ? editableParserData : editableSizerData;
+            if (!dataRef) return;
+
+            const allowEdit = toolName !== 'sizer';
             
-            if (toolName === 'parser') {
-                if (!parserData) return;
-                
-                // Re-render tree with search highlighting
-                const output = document.getElementById('parserOutput');
-                output.innerHTML = buildTreeViewWithSearch(parserData, searchTerm);
-                
-                // Update navigation
-                updateSearchNavigation(toolName, searchTerm);
-                
-            } else if (toolName === 'sizer') {
-                if (!sizerData) return;
-                
-                // Re-render tree with search highlighting
-                const output = document.getElementById('sizerOutput');
-                output.innerHTML = buildTreeViewWithSearch(sizerData, searchTerm);
-                
-                // Update navigation
-                updateSearchNavigation(toolName, searchTerm);
+            if (!searchTerm) {
+                searchMatches = [];
+                currentSearchIndex = 0;
+                const countElement = document.getElementById(toolName + 'SearchCount');
+                if (countElement) countElement.textContent = '0/0';
+                return rerenderTool(toolName);
             }
+
+            output.innerHTML = buildTreeViewWithSearch(dataRef, searchTerm, allowEdit);
+            if (allowEdit) attachEditableHandlers(toolName);
+            updateSearchNavigation(toolName, searchTerm);
         }
 
         // Update search navigation UI
         function updateSearchNavigation(toolName, searchTerm) {
-            const navElement = document.getElementById(toolName + 'SearchNav');
             const countElement = document.getElementById(toolName + 'SearchCount');
-            
-            if (searchTerm.length > 0 && searchMatches.length > 0) {
-                navElement.style.display = 'block';
-                countElement.textContent = `1/${searchMatches.length}`;
-                // Scroll to first match
+            const total = searchMatches.length;
+            const currentDisplay = total > 0 ? 1 : 0;
+            countElement.textContent = `${currentDisplay}/${total}`;
+
+            if (searchTerm.length > 0 && total > 0) {
                 scrollToSearchMatch(0);
-            } else {
-                navElement.style.display = 'none';
             }
         }
 
@@ -916,7 +755,7 @@
 
         // Build tree node with search highlighting
         function buildTreeNodeWithSearch(data, key, path, level, searchTerm) {
-            const currentPath = path ? path + '.' + key : key;
+            const currentPath = path ? (key ? path + '.' + key : path) : key;
             let html = '';
             
             if (data === null) {
@@ -926,9 +765,13 @@
                 
                 html += '<div class="tree-node' + (hasMatch ? ' search-highlight' : '') + '" style="margin-left: ' + (level * 25) + 'px;"' + (elementId ? ' id="' + elementId + '"' : '') + '>';
                 if (key) {
-                    html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
+                    html += '<span class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
-                html += '<span class="tree-null">null</span>';
+                html += '<span class="tree-null editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true">null</span>';
+                if (currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                    html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
+                }
                 html += '</div>';
             } else if (typeof data === 'object') {
                 const isArray = Array.isArray(data);
@@ -942,10 +785,12 @@
                 html += '<div class="tree-node" style="margin-left: ' + (level * 25) + 'px;">';
                 html += '<span class="tree-toggle" onclick="toggleNode(\'' + nodeId + '\', event)">▼</span>';
                 if (key) {
-                    html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
+                    html += '<span class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
                 html += '<span class="tree-value">' + (isArray ? '[' : '{') + '</span>';
                 html += '<span class="tree-count">' + count + ' ' + (isArray ? 'items' : 'properties') + '</span>';
+                html += '<button class="ml-2 text-xs text-emerald-300 hover:text-emerald-200 add-btn" data-add-type="' + (isArray ? 'array' : 'object') + '" data-add-path="' + currentPath + '">＋</button>';
+                if (currentPath) html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
                 html += '</div>';
                 
                 html += '<div id="' + nodeId + '" class="tree-children' + (hasMatch && searchTerm ? '' : '') + '">';
@@ -970,9 +815,13 @@
                 
                 html += '<div class="tree-node' + (hasMatch ? ' search-highlight' : '') + '" style="margin-left: ' + (level * 25) + 'px;"' + (elementId ? ' id="' + elementId + '"' : '') + '>';
                 if (key) {
-                    html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
+                    html += '<span class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
-                html += '<span class="tree-string">"' + highlightText(escapeHtml(data), searchTerm) + '"</span>';
+                html += '<span class="tree-string editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true">"' + highlightText(escapeHtml(data), searchTerm) + '"</span>';
+                if (currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                    html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
+                }
                 html += '</div>';
             } else if (typeof data === 'number') {
                 const hasMatch = (key && key.toLowerCase().includes(searchTerm)) || data.toString().toLowerCase().includes(searchTerm);
@@ -981,9 +830,13 @@
                 
                 html += '<div class="tree-node' + (hasMatch ? ' search-highlight' : '') + '" style="margin-left: ' + (level * 25) + 'px;"' + (elementId ? ' id="' + elementId + '"' : '') + '>';
                 if (key) {
-                    html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
+                    html += '<span class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
-                html += '<span class="tree-number">' + highlightText(data.toString(), searchTerm) + '</span>';
+                html += '<span class="tree-number editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true">' + highlightText(data.toString(), searchTerm) + '</span>';
+                if (currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                    html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
+                }
                 html += '</div>';
             } else if (typeof data === 'boolean') {
                 const hasMatch = (key && key.toLowerCase().includes(searchTerm)) || data.toString().toLowerCase().includes(searchTerm);
@@ -992,9 +845,13 @@
                 
                 html += '<div class="tree-node' + (hasMatch ? ' search-highlight' : '') + '" style="margin-left: ' + (level * 25) + 'px;"' + (elementId ? ' id="' + elementId + '"' : '') + '>';
                 if (key) {
-                    html += '<span class="tree-key">"' + highlightText(key, searchTerm) + '"</span>: ';
+                    html += '<span class="tree-key editable-value" data-path="' + currentPath + '" data-editable-key="true" contenteditable="true">"' + highlightText(key, searchTerm) + '"</span>: ';
                 }
-                html += '<span class="tree-boolean">' + highlightText(data.toString(), searchTerm) + '</span>';
+                html += '<span class="tree-boolean editable-value" data-path="' + currentPath + '" data-editable-value="true" contenteditable="true">' + highlightText(data.toString(), searchTerm) + '</span>';
+                if (currentPath) {
+                    html += '<button class="ml-1 text-[10px] text-emerald-300 hover:text-emerald-100 add-inline" data-insert="after" data-insert-path="' + currentPath + '">＋</button>';
+                    html += '<button class="ml-2 text-xs text-rose-300 hover:text-rose-200 delete-btn" data-delete-path="' + currentPath + '">✕</button>';
+                }
                 html += '</div>';
             }
             
@@ -1007,6 +864,308 @@
             
             const regex = new RegExp('(' + escapeRegex(searchTerm) + ')', 'gi');
             return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function deepClone(obj) {
+            if (typeof structuredClone === 'function') return structuredClone(obj);
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function parsePath(path) {
+            if (!path) return [];
+            const parts = path.split('.').filter(Boolean).map(part => {
+                if (part.startsWith('[') && part.endsWith(']')) {
+                    const idx = parseInt(part.slice(1, -1), 10);
+                    return isNaN(idx) ? part : idx;
+                }
+                return part;
+            });
+            if (parts[0] === 'root') parts.shift();
+            return parts;
+        }
+
+        function getDataRef(toolName) {
+            return toolName === 'parser' ? editableParserData : editableSizerData;
+        }
+
+        function addProperty(toolName, path, key, value) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            let ref = data;
+            for (let i = 0; i < parts.length; i++) {
+                ref = ref?.[parts[i]];
+                if (ref == null) return;
+            }
+            if (ref && typeof ref === 'object' && !Array.isArray(ref)) {
+                ref[key] = value;
+            }
+        }
+
+        function addArrayItem(toolName, path, value) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            let ref = data;
+            for (let i = 0; i < parts.length; i++) {
+                ref = ref?.[parts[i]];
+                if (ref == null) return;
+            }
+            if (Array.isArray(ref)) {
+                ref.push(value);
+            }
+        }
+
+        function insertObjectSibling(toolName, path, position, newKey, value) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            if (parts.length === 0) return;
+            const targetKey = parts.pop();
+            if (typeof targetKey === 'number') return;
+            let ref = data;
+            for (let i = 0; i < parts.length; i++) {
+                ref = ref?.[parts[i]];
+                if (ref == null) return;
+            }
+            if (ref && typeof ref === 'object' && !Array.isArray(ref)) {
+                if (newKey in ref) return; // avoid duplicate keys
+                const entries = Object.entries(ref);
+                const updated = {};
+                entries.forEach(([k, v]) => {
+                    if (position === 'before' && k === targetKey) {
+                        updated[newKey] = value;
+                    }
+                    updated[k] = v;
+                    if (position === 'after' && k === targetKey) {
+                        updated[newKey] = value;
+                    }
+                });
+                Object.keys(ref).forEach(k => delete ref[k]);
+                Object.assign(ref, updated);
+            }
+        }
+
+        function insertArraySibling(toolName, path, position, value) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            if (parts.length === 0) return;
+            const targetIndex = parts.pop();
+            if (typeof targetIndex !== 'number') return;
+            let ref = data;
+            for (let i = 0; i < parts.length; i++) {
+                ref = ref?.[parts[i]];
+                if (!Array.isArray(ref) && typeof ref !== 'object') return;
+            }
+            if (Array.isArray(ref)) {
+                const insertAt = position === 'before' ? targetIndex : targetIndex + 1;
+                ref.splice(insertAt, 0, value);
+            }
+        }
+
+        function setValueAtPath(toolName, path, newValue) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            if (parts.length === 0) return;
+            let ref = data;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (ref == null) return;
+                ref = ref[parts[i]];
+            }
+            const last = parts[parts.length - 1];
+            if (ref == null) return;
+            ref[last] = newValue;
+        }
+
+        function deleteAtPath(toolName, path) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            if (parts.length === 0) return;
+            let ref = data;
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (ref == null) return;
+                ref = ref[parts[i]];
+            }
+            const last = parts[parts.length - 1];
+            if (Array.isArray(ref) && typeof last === 'number') {
+                ref.splice(last, 1);
+            } else if (ref && typeof ref === 'object') {
+                delete ref[last];
+            }
+        }
+
+        function renameKeyAtPath(toolName, path, newKey) {
+            const data = getDataRef(toolName);
+            if (!data) return;
+            const parts = parsePath(path);
+            if (parts.length === 0) return;
+            const last = parts.pop();
+            if (typeof last === 'number') return; // don't rename array indexes
+            if (!newKey || newKey === last) return;
+            let ref = data;
+            for (let i = 0; i < parts.length; i++) {
+                if (ref == null) return;
+                ref = ref[parts[i]];
+            }
+            if (ref && typeof ref === 'object' && !Array.isArray(ref) && last in ref) {
+                if (newKey in ref) return; // avoid clobbering existing key
+                const entries = Object.entries(ref);
+                const updated = {};
+                entries.forEach(([k, v]) => {
+                    const targetKey = k === last ? newKey : k;
+                    updated[targetKey] = v;
+                });
+                Object.keys(ref).forEach(k => delete ref[k]);
+                Object.assign(ref, updated); // preserves original order with renamed slot
+            }
+        }
+
+        function normalizeValue(text) {
+            const trimmed = text.trim();
+            // Remove surrounding quotes if present (since we render strings with quotes)
+            const unquoted = (trimmed.startsWith('"') && trimmed.endsWith('"')) ? trimmed.slice(1, -1) : trimmed;
+            // Try JSON parse to preserve numbers/booleans/null/objects/arrays
+            try {
+                return JSON.parse(trimmed);
+            } catch (_) {
+                try {
+                    return JSON.parse(unquoted);
+                } catch (_) {
+                    return unquoted;
+                }
+            }
+        }
+
+        function rerenderTool(toolName) {
+            const dataRef = toolName === 'parser' ? editableParserData : editableSizerData;
+            if (!dataRef) return;
+            const output = document.getElementById(toolName + 'Output');
+            const isSizer = toolName === 'sizer';
+            const allowEdit = !isSizer;
+            const totalSize = getByteSize(JSON.stringify(dataRef));
+            const treeHtml = buildTreeView(dataRef, '', isSizer, totalSize, allowEdit);
+            const info = isSizer ? '<div class="info-message">Taille actuelle (lecture seule): <strong>' + totalSize + ' bytes</strong> (' + (totalSize / 1024).toFixed(2) + ' KB)</div>' : '';
+            output.innerHTML = info + treeHtml;
+            if (allowEdit) attachEditableHandlers(toolName);
+        }
+
+        function attachEditableHandlers(toolName) {
+            if (toolName === 'sizer') return;
+            const output = document.getElementById(toolName + 'Output');
+            if (!output) return;
+
+            output.querySelectorAll('[data-editable-key="true"]').forEach(span => {
+                const node = span.closest('.tree-node');
+                span.addEventListener('focus', () => {
+                    isEditing = true;
+                    node && node.classList.add('editing');
+                });
+                span.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        isEditing = false;
+                        node && node.classList.remove('editing');
+                    }, 80);
+                    const path = span.getAttribute('data-path');
+                    if (!path) return;
+                    const parts = parsePath(path);
+                    const oldKey = parts.length ? parts[parts.length - 1] : '';
+                    const raw = span.textContent || '';
+                    const newKey = raw.replace(/^"|"$/g, '').trim();
+                    if (!newKey) {
+                        span.textContent = '"' + oldKey + '"';
+                        return rerenderTool(toolName);
+                    }
+                    if (newKey === oldKey) return rerenderTool(toolName);
+                    renameKeyAtPath(toolName, path, newKey);
+                    rerenderTool(toolName);
+                });
+            });
+
+            output.querySelectorAll('[data-editable-value="true"]').forEach(span => {
+                const node = span.closest('.tree-node');
+                span.addEventListener('focus', () => {
+                    isEditing = true;
+                    node && node.classList.add('editing');
+                });
+                span.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        isEditing = false;
+                        node && node.classList.remove('editing');
+                    }, 80);
+                    const path = span.getAttribute('data-path');
+                    if (!path) return;
+                    const val = normalizeValue(span.textContent || '');
+                    setValueAtPath(toolName, path, val);
+                    rerenderTool(toolName);
+                });
+            });
+
+            output.querySelectorAll('[data-delete-path]').forEach(btn => {
+                btn.addEventListener('mousedown', (e) => {
+                    const active = document.activeElement;
+                    const node = btn.closest('.tree-node');
+                    if (isEditing || (active && active.isContentEditable) || (node && node.classList.contains('editing'))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+                btn.addEventListener('click', (e) => {
+                    const node = btn.closest('.tree-node');
+                    if (isEditing || (node && node.classList.contains('editing'))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                    const path = btn.getAttribute('data-delete-path');
+                    deleteAtPath(toolName, path);
+                    rerenderTool(toolName);
+                });
+            });
+
+            output.querySelectorAll('[data-add-type]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (isEditing) return;
+                    const type = btn.getAttribute('data-add-type');
+                    const path = btn.getAttribute('data-add-path');
+                    if (type === 'object') {
+                        const key = prompt('Nom de la nouvelle propriété ?');
+                        if (!key) return;
+                        const raw = prompt('Valeur (JSON ou texte) ?', 'null');
+                        const val = normalizeValue((raw ?? 'null').toString());
+                        addProperty(toolName, path, key, val);
+                    } else if (type === 'array') {
+                        const raw = prompt('Nouvel item (JSON ou texte) ?', 'null');
+                        const val = normalizeValue((raw ?? 'null').toString());
+                        addArrayItem(toolName, path, val);
+                    }
+                    rerenderTool(toolName);
+                });
+            });
+
+            output.querySelectorAll('[data-insert]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (isEditing) return;
+                    const position = btn.getAttribute('data-insert');
+                    const path = btn.getAttribute('data-insert-path');
+                    const parts = parsePath(path);
+                    const last = parts[parts.length - 1];
+                    if (typeof last === 'number') {
+                        const raw = prompt('Nouvel item (JSON ou texte) ?', 'null');
+                        const val = normalizeValue((raw ?? 'null').toString());
+                        insertArraySibling(toolName, path, position, val);
+                    } else {
+                        const key = prompt('Nom de la nouvelle propriété ?');
+                        if (!key) return;
+                        const raw = prompt('Valeur (JSON ou texte) ?', 'null');
+                        const val = normalizeValue((raw ?? 'null').toString());
+                        insertObjectSibling(toolName, path, position, key, val);
+                    }
+                    rerenderTool(toolName);
+                });
+            });
         }
 
         // Check if object contains search term
@@ -1052,11 +1211,10 @@
             
             try {
                 sizerData = JSON.parse(input);
-                const totalSize = getByteSize(input);
-                output.innerHTML = buildTreeView(sizerData, '', true, totalSize);
-                
-                // Add total size info
-                output.innerHTML = '<div class="info-message">Total JSON size: <strong>' + totalSize + ' bytes</strong> (' + (totalSize / 1024).toFixed(2) + ' KB)</div>' + output.innerHTML;
+                editableSizerData = deepClone(sizerData);
+                const totalSize = getByteSize(JSON.stringify(editableSizerData));
+                const treeHtml = buildTreeView(editableSizerData, '', true, totalSize, false);
+                output.innerHTML = '<div class="info-message">Taille actuelle (lecture seule): <strong>' + totalSize + ' bytes</strong> (' + (totalSize / 1024).toFixed(2) + ' KB)</div>' + treeHtml;
             } catch (e) {
                 output.innerHTML = '<div class="error-message">Invalid JSON: ' + e.message + '</div>';
             }
@@ -1214,19 +1372,19 @@
         function toggleFullscreen(section) {
             const outputElement = document.getElementById(section + 'Output');
             const isMaximized = outputElement.classList.contains('maximized');
+            const btn = document.getElementById(section + 'MaximizeBtn');
             
             if (isMaximized) {
                 // Exit maximized mode
                 outputElement.classList.remove('maximized');
                 document.body.classList.remove('has-maximized-view');
-                // Remove close button
-                const closeBtn = document.querySelector('.maximize-close-btn');
-                if (closeBtn) closeBtn.remove();
+                if (btn) btn.textContent = 'Maximize';
             } else {
                 // Enter maximized mode
                 
                 outputElement.classList.add('maximized');
                 document.body.classList.add('has-maximized-view');
+                if (btn) btn.textContent = 'Minimize';
                 
                 // Force visibility
                 outputElement.style.display = 'block';
@@ -1236,18 +1394,6 @@
                 if (!outputElement.innerHTML.trim()) {
                     outputElement.innerHTML = '<div style="padding: 20px; color: #666;">No content to display. Please load and process some JSON first.</div>';
                 }
-                
-                // Add close button at the top
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'btn btn-small maximize-close-btn';
-                closeBtn.innerHTML = '❌ Close';
-                closeBtn.style.position = 'fixed';
-                closeBtn.style.top = '10px';
-                closeBtn.style.right = '10px';
-                closeBtn.style.zIndex = '10000';
-                closeBtn.onclick = () => toggleFullscreen(section);
-                
-                document.body.appendChild(closeBtn);
             }
         }
     </script>
