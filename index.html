@@ -1176,31 +1176,36 @@
         }
 
         function promptForValue() {
-            const type = prompt('Type de valeur ? (string, number, boolean, null, object, array, json)', 'json');
+            const type = prompt('Type de valeur ? (chaîne, nombre, booléen, null, objet, tableau, json)', 'json');
             if (type === null) return { cancelled: true };
             const t = type.trim().toLowerCase();
-
-            const ask = (message, fallback = '') => {
-                const raw = prompt(message, fallback);
-                if (raw === null) return { cancelled: true };
-                return { value: normalizeValue(raw) };
-            };
 
             if (t === 'object' || t === 'objet') return { value: {} };
             if (t === 'array' || t === 'tableau' || t === 'liste') return { value: [] };
             if (t === 'null') return { value: null };
-            if (t === 'boolean' || t === 'bool') {
+            if (t === 'string' || t === 'texte' || t === 'chaine' || t === 'chaîne') {
+                const rawText = prompt('Texte ?', '');
+                if (rawText === null) return { cancelled: true };
+                return { value: rawText };
+            }
+            if (t === 'boolean' || t === 'bool' || t === 'booléen') {
                 const raw = prompt('Valeur booléenne ? (true/false)', 'true');
                 if (raw === null) return { cancelled: true };
                 return { value: /^true$/i.test(raw.trim()) };
             }
-            if (t === 'number' || t === 'nombre') {
+            if (t === 'number' || t === 'nombre' || t === 'numérique') {
                 const raw = prompt('Valeur numérique ?', '0');
                 if (raw === null) return { cancelled: true };
                 const num = Number(raw);
-                return { value: Number.isNaN(num) ? normalizeValue(raw) : num };
+                if (Number.isNaN(num)) {
+                    alert('Valeur numérique invalide.');
+                    return { cancelled: true };
+                }
+                return { value: num };
             }
-            return ask('Valeur (JSON ou texte) ?', 'null');
+            const raw = prompt('Valeur (JSON ou texte) ?', 'null');
+            if (raw === null) return { cancelled: true };
+            return { value: normalizeValue(raw) };
         }
 
         function rerenderTool(toolName) {
