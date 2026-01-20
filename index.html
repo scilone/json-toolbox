@@ -1183,7 +1183,7 @@
             if (t === 'object' || t === 'objet') return { value: {} };
             if (t === 'array' || t === 'tableau' || t === 'liste') return { value: [] };
             if (t === 'null') return { value: null };
-            if (t === 'string' || t === 'texte' || t === 'chaine' || t === 'chaîne') {
+            if (t === 'string' || t === 'texte' || t === 'chaîne') {
                 const rawText = prompt('Texte ?', '');
                 if (rawText === null) return { cancelled: true };
                 return { value: rawText };
@@ -1203,9 +1203,24 @@
                 }
                 return { value: num };
             }
+            if (t === 'json') {
+                const rawJson = prompt('Valeur JSON ?', 'null');
+                if (rawJson === null) return { cancelled: true };
+                try {
+                    return { value: normalizeValue(rawJson) };
+                } catch (_) {
+                    alert('Valeur JSON invalide.');
+                    return { cancelled: true };
+                }
+            }
             const raw = prompt('Valeur (JSON ou texte) ?', 'null');
             if (raw === null) return { cancelled: true };
-            return { value: normalizeValue(raw) };
+            try {
+                return { value: normalizeValue(raw) };
+            } catch (_) {
+                alert('Valeur invalide.');
+                return { cancelled: true };
+            }
         }
 
         function rerenderTool(toolName) {
