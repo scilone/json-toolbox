@@ -1175,6 +1175,34 @@
             }
         }
 
+        function promptForValue() {
+            const type = prompt('Type de valeur ? (string, number, boolean, null, object, array, json)', 'json');
+            if (type === null) return { cancelled: true };
+            const t = type.trim().toLowerCase();
+
+            const ask = (message, fallback = '') => {
+                const raw = prompt(message, fallback);
+                if (raw === null) return { cancelled: true };
+                return { value: normalizeValue(raw) };
+            };
+
+            if (t === 'object' || t === 'objet') return { value: {} };
+            if (t === 'array' || t === 'tableau' || t === 'liste') return { value: [] };
+            if (t === 'null') return { value: null };
+            if (t === 'boolean' || t === 'bool') {
+                const raw = prompt('Valeur booléenne ? (true/false)', 'true');
+                if (raw === null) return { cancelled: true };
+                return { value: /^true$/i.test(raw.trim()) };
+            }
+            if (t === 'number' || t === 'nombre') {
+                const raw = prompt('Valeur numérique ?', '0');
+                if (raw === null) return { cancelled: true };
+                const num = Number(raw);
+                return { value: Number.isNaN(num) ? normalizeValue(raw) : num };
+            }
+            return ask('Valeur (JSON ou texte) ?', 'null');
+        }
+
         function rerenderTool(toolName) {
             const dataRef = toolName === 'parser' ? editableParserData : editableSizerData;
             if (!dataRef) return;
@@ -1269,12 +1297,14 @@
                     if (type === 'object') {
                         const key = prompt('Nom de la nouvelle propriété ?');
                         if (!key) return;
-                        const raw = prompt('Valeur (JSON ou texte) ?', 'null');
-                        const val = normalizeValue((raw ?? 'null').toString());
+                        const result = promptForValue();
+                        if (result.cancelled) return;
+                        const val = result.value;
                         addProperty(toolName, path, key, val);
                     } else if (type === 'array') {
-                        const raw = prompt('Nouvel item (JSON ou texte) ?', 'null');
-                        const val = normalizeValue((raw ?? 'null').toString());
+                        const result = promptForValue();
+                        if (result.cancelled) return;
+                        const val = result.value;
                         addArrayItem(toolName, path, val);
                     }
                     rerenderTool(toolName);
@@ -1289,14 +1319,16 @@
                     const parts = parsePath(path);
                     const last = parts[parts.length - 1];
                     if (typeof last === 'number') {
-                        const raw = prompt('Nouvel item (JSON ou texte) ?', 'null');
-                        const val = normalizeValue((raw ?? 'null').toString());
+                        const result = promptForValue();
+                        if (result.cancelled) return;
+                        const val = result.value;
                         insertArraySibling(toolName, path, position, val);
                     } else {
                         const key = prompt('Nom de la nouvelle propriété ?');
                         if (!key) return;
-                        const raw = prompt('Valeur (JSON ou texte) ?', 'null');
-                        const val = normalizeValue((raw ?? 'null').toString());
+                        const result = promptForValue();
+                        if (result.cancelled) return;
+                        const val = result.value;
                         insertObjectSibling(toolName, path, position, key, val);
                     }
                     rerenderTool(toolName);
