@@ -1175,25 +1175,20 @@
             }
         }
 
-        function promptForValue() {
-            const type = prompt('Type de valeur ? (chaîne, nombre, booléen, null, objet, tableau, json)', 'json');
+        function promptForTypeAndValue() {
+            const type = prompt('Choisir le type :\n1) Objet\n2) Tableau\n3) Chaîne\n4) Nombre\n5) Booléen\n6) Null\n7) JSON brut', '1');
             if (type === null) return { cancelled: true };
-            const t = type.trim().toLowerCase();
+            const t = type.trim();
 
-            if (t === 'object' || t === 'objet') return { value: {} };
-            if (t === 'array' || t === 'tableau' || t === 'liste') return { value: [] };
-            if (t === 'null') return { value: null };
-            if (t === 'string' || t === 'texte' || t === 'chaîne') {
+            if (t === '1') return { value: {}, kind: 'object' };
+            if (t === '2') return { value: [], kind: 'array' };
+            if (t === '6') return { value: null, kind: 'null' };
+            if (t === '3') {
                 const rawText = prompt('Texte ?', '');
                 if (rawText === null) return { cancelled: true };
-                return { value: rawText };
+                return { value: rawText, kind: 'string' };
             }
-            if (t === 'boolean' || t === 'bool' || t === 'booléen') {
-                const raw = prompt('Valeur booléenne ? (true/false)', 'true');
-                if (raw === null) return { cancelled: true };
-                return { value: /^true$/i.test(raw.trim()) };
-            }
-            if (t === 'number' || t === 'nombre' || t === 'numérique') {
+            if (t === '4') {
                 const raw = prompt('Valeur numérique ?', '0');
                 if (raw === null) return { cancelled: true };
                 const num = Number(raw);
@@ -1201,26 +1196,24 @@
                     alert('Valeur numérique invalide.');
                     return { cancelled: true };
                 }
-                return { value: num };
+                return { value: num, kind: 'number' };
             }
-            if (t === 'json') {
+            if (t === '5') {
+                const raw = prompt('Valeur booléenne ? (true/false)', 'true');
+                if (raw === null) return { cancelled: true };
+                return { value: /^true$/i.test(raw.trim()), kind: 'boolean' };
+            }
+            if (t === '7') {
                 const rawJson = prompt('Valeur JSON ?', 'null');
                 if (rawJson === null) return { cancelled: true };
                 try {
-                    return { value: normalizeValue(rawJson) };
+                    return { value: normalizeValue(rawJson), kind: 'json' };
                 } catch (_) {
                     alert('Valeur JSON invalide.');
                     return { cancelled: true };
                 }
             }
-            const raw = prompt('Valeur (JSON ou texte) ?', 'null');
-            if (raw === null) return { cancelled: true };
-            try {
-                return { value: normalizeValue(raw) };
-            } catch (_) {
-                alert('Valeur invalide.');
-                return { cancelled: true };
-            }
+            return { cancelled: true };
         }
 
         function rerenderTool(toolName) {
@@ -1314,18 +1307,14 @@
                     if (isEditing) return;
                     const type = btn.getAttribute('data-add-type');
                     const path = btn.getAttribute('data-add-path');
+                    const result = promptForTypeAndValue();
+                    if (result.cancelled) return;
                     if (type === 'object') {
                         const key = prompt('Nom de la nouvelle propriété ?');
                         if (!key) return;
-                        const result = promptForValue();
-                        if (result.cancelled) return;
-                        const val = result.value;
-                        addProperty(toolName, path, key, val);
+                        addProperty(toolName, path, key, result.value);
                     } else if (type === 'array') {
-                        const result = promptForValue();
-                        if (result.cancelled) return;
-                        const val = result.value;
-                        addArrayItem(toolName, path, val);
+                        addArrayItem(toolName, path, result.value);
                     }
                     rerenderTool(toolName);
                 });
@@ -1338,18 +1327,14 @@
                     const path = btn.getAttribute('data-insert-path');
                     const parts = parsePath(path);
                     const last = parts[parts.length - 1];
+                    const result = promptForTypeAndValue();
+                    if (result.cancelled) return;
                     if (typeof last === 'number') {
-                        const result = promptForValue();
-                        if (result.cancelled) return;
-                        const val = result.value;
-                        insertArraySibling(toolName, path, position, val);
+                        insertArraySibling(toolName, path, position, result.value);
                     } else {
                         const key = prompt('Nom de la nouvelle propriété ?');
                         if (!key) return;
-                        const result = promptForValue();
-                        if (result.cancelled) return;
-                        const val = result.value;
-                        insertObjectSibling(toolName, path, position, key, val);
+                        insertObjectSibling(toolName, path, position, key, result.value);
                     }
                     rerenderTool(toolName);
                 });
