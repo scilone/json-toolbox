@@ -1255,6 +1255,10 @@
                     if (e.key === 'Escape') {
                         cleanup();
                         resolve(null);
+                    } else if (e.key === 'Enter') {
+                        const value = select.value;
+                        cleanup();
+                        resolve(value);
                     }
                 };
 
@@ -1273,25 +1277,131 @@
                 overlay.appendChild(panel);
                 document.body.appendChild(overlay);
                 document.addEventListener('keydown', onKey);
+                select.focus();
             });
         }
 
-        async function promptForTypeAndValue() {
+        function showInputModal(title, defaultValue = '', placeholder = '') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.inset = '0';
+                overlay.style.background = 'rgba(0,0,0,0.55)';
+                overlay.style.zIndex = '10050';
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+
+                const panel = document.createElement('div');
+                panel.style.background = '#0b1021';
+                panel.style.color = '#e2e8f0';
+                panel.style.border = '1px solid rgba(255,255,255,0.12)';
+                panel.style.borderRadius = '12px';
+                panel.style.padding = '16px';
+                panel.style.boxShadow = '0 20px 60px rgba(0,0,0,0.45)';
+                panel.style.minWidth = '260px';
+                panel.style.fontFamily = 'Inter, system-ui, sans-serif';
+
+                const label = document.createElement('div');
+                label.textContent = title;
+                label.style.marginBottom = '10px';
+                label.style.fontWeight = '600';
+                label.style.fontSize = '14px';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = defaultValue;
+                input.placeholder = placeholder;
+                input.style.width = '100%';
+                input.style.padding = '8px';
+                input.style.borderRadius = '8px';
+                input.style.border = '1px solid #334155';
+                input.style.background = '#050814';
+                input.style.color = '#e2e8f0';
+                input.style.marginBottom = '12px';
+                input.style.outline = 'none';
+
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.gap = '8px';
+                actions.style.justifyContent = 'flex-end';
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = 'Annuler';
+                cancelBtn.style.padding = '8px 12px';
+                cancelBtn.style.borderRadius = '8px';
+                cancelBtn.style.border = '1px solid #475569';
+                cancelBtn.style.background = '#1f2937';
+                cancelBtn.style.color = '#cbd5e1';
+
+                const okBtn = document.createElement('button');
+                okBtn.textContent = 'Valider';
+                okBtn.style.padding = '8px 12px';
+                okBtn.style.borderRadius = '8px';
+                okBtn.style.border = '1px solid #7c3aed';
+                okBtn.style.background = 'linear-gradient(135deg, #7c3aed, #6366f1)';
+                okBtn.style.color = '#fff';
+                okBtn.style.fontWeight = '600';
+
+                const cleanup = () => {
+                    document.removeEventListener('keydown', onKey);
+                    overlay.remove();
+                };
+
+                const onKey = (e) => {
+                    if (e.key === 'Escape') {
+                        cleanup();
+                        resolve(null);
+                    } else if (e.key === 'Enter') {
+                        const value = input.value;
+                        cleanup();
+                        resolve(value);
+                    }
+                };
+
+                cancelBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(null);
+                });
+                okBtn.addEventListener('click', () => {
+                    const value = input.value;
+                    cleanup();
+                    resolve(value);
+                });
+
+                actions.append(cancelBtn, okBtn);
+                panel.append(label, input, actions);
+                overlay.appendChild(panel);
+                document.body.appendChild(overlay);
+                document.addEventListener('keydown', onKey);
+                input.focus();
+                if (defaultValue) input.select();
+            });
+        }
+
+        async function promptForTypeAndValue(needsKey = false) {
             const type = await showTypePicker();
             if (!type) return { cancelled: true };
 
-            if (type === 'object') return { value: {}, kind: 'object' };
-            if (type === 'array') return { value: [], kind: 'array' };
+            let key = null;
+            if (needsKey) {
+                key = await showInputModal('Nom de la nouvelle propriété ?');
+                if (key === null || key.trim() === '') return { cancelled: true };
+                key = key.trim();
+            }
+
+            if (type === 'object') return { value: {}, kind: 'object', key };
+            if (type === 'array') return { value: [], kind: 'array', key };
             if (type === 'string') {
-                const rawText = prompt('Texte ?', '');
+                const rawText = await showInputModal('Texte ?', '');
                 if (rawText === null) return { cancelled: true };
-                return { value: rawText, kind: 'string' };
+                return { value: rawText, kind: 'string', key };
             }
             // bare: laisser l’utilisateur donner une valeur brute (JSON ou texte)
-            const raw = prompt('Valeur (JSON ou texte) ?', 'null');
+            const raw = await showInputModal('Valeur (JSON ou texte) ?', 'null');
             if (raw === null) return { cancelled: true };
             try {
-                return { value: normalizeValue(raw), kind: 'bare' };
+                return { value: normalizeValue(raw), kind: 'bare', key };
             } catch (_) {
                 alert('Valeur invalide.');
                 return { cancelled: true };
@@ -1389,12 +1499,10 @@
                     if (isEditing) return;
                     const type = btn.getAttribute('data-add-type');
                     const path = btn.getAttribute('data-add-path');
-                    const result = await promptForTypeAndValue();
+                    const result = await promptForTypeAndValue(type === 'object');
                     if (result.cancelled) return;
                     if (type === 'object') {
-                        const key = prompt('Nom de la nouvelle propriété ?');
-                        if (!key) return;
-                        addProperty(toolName, path, key, result.value);
+                        addProperty(toolName, path, result.key, result.value);
                     } else if (type === 'array') {
                         addArrayItem(toolName, path, result.value);
                     }
@@ -1409,14 +1517,13 @@
                     const path = btn.getAttribute('data-insert-path');
                     const parts = parsePath(path);
                     const last = parts[parts.length - 1];
-                    const result = await promptForTypeAndValue();
+                    const isObjectSibling = typeof last !== 'number';
+                    const result = await promptForTypeAndValue(isObjectSibling);
                     if (result.cancelled) return;
-                    if (typeof last === 'number') {
+                    if (!isObjectSibling) {
                         insertArraySibling(toolName, path, position, result.value);
                     } else {
-                        const key = prompt('Nom de la nouvelle propriété ?');
-                        if (!key) return;
-                        insertObjectSibling(toolName, path, position, key, result.value);
+                        insertObjectSibling(toolName, path, position, result.key, result.value);
                     }
                     rerenderTool(toolName);
                 });
